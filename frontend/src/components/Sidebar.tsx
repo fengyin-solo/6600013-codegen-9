@@ -1,6 +1,6 @@
 import { useDesignStore } from '../store/design'
 import { THEMES } from '../themes/palettes'
-import type { PatternType } from '../types'
+import type { PatternType, MirrorMode } from '../types'
 
 const PATTERNS: { value: PatternType; label: string }[] = [
   { value: 'spiral',  label: '🌀 螺旋' },
@@ -8,6 +8,14 @@ const PATTERNS: { value: PatternType; label: string }[] = [
   { value: 'wave',    label: '🌊 波浪' },
   { value: 'circles', label: '⭕ 圆环' },
   { value: 'noise',   label: '🎲 噪声场' },
+]
+
+const MIRROR_MODES: { value: MirrorMode; label: string }[] = [
+  { value: 'none',       label: '无' },
+  { value: 'horizontal', label: '水平' },
+  { value: 'vertical',   label: '垂直' },
+  { value: 'quad',       label: '四象' },
+  { value: 'radial',     label: '放射' },
 ]
 
 export default function Sidebar() {
@@ -89,6 +97,49 @@ export default function Sidebar() {
         <label className="text-xs text-gray-400">透明度: {store.opacity.toFixed(2)}</label>
         <input type="range" min={0.1} max={1} step={0.05} value={store.opacity}
           onChange={e => store.setParam('opacity', Number(e.target.value))} className="w-full accent-pink-500" />
+      </div>
+
+      {/* Mirror Mode */}
+      <div>
+        <label className="text-xs text-gray-400 block mb-1">镜像模式</label>
+        <div className="grid grid-cols-5 gap-1">
+          {MIRROR_MODES.map(m => (
+            <button key={m.value} onClick={() => store.setMirrorMode(m.value)}
+              className={`px-1 py-1.5 rounded text-xs font-medium ${store.mirrorMode === m.value ? 'bg-indigo-600' : 'bg-gray-700 hover:bg-gray-600'}`}>
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Collage Layout */}
+      <div className="border-t border-gray-700 pt-3">
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-xs text-gray-400">拼贴布局</label>
+          <button onClick={() => store.toggleCollage()}
+            className={`w-10 h-5 rounded-full transition-colors relative ${store.collageEnabled ? 'bg-indigo-600' : 'bg-gray-600'}`}>
+            <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${store.collageEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+          </button>
+        </div>
+        {store.collageEnabled && (
+          <div className="space-y-2">
+            <div>
+              <label className="text-xs text-gray-400">列数: {store.collageCols}</label>
+              <input type="range" min={2} max={6} step={1} value={store.collageCols}
+                onChange={e => store.setParam('collageCols', Number(e.target.value))} className="w-full accent-cyan-500" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400">行数: {store.collageRows}</label>
+              <input type="range" min={2} max={6} step={1} value={store.collageRows}
+                onChange={e => store.setParam('collageRows', Number(e.target.value))} className="w-full accent-cyan-500" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400">间距: {store.collageGap}px</label>
+              <input type="range" min={0} max={20} step={1} value={store.collageGap}
+                onChange={e => store.setParam('collageGap', Number(e.target.value))} className="w-full accent-amber-500" />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Export */}

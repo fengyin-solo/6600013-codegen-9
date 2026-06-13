@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { DesignParams, PatternType } from '../types'
+import type { DesignParams, PatternType, MirrorMode } from '../types'
 import { THEMES } from '../themes/palettes'
 
 interface DesignStore extends DesignParams {
@@ -7,6 +7,8 @@ interface DesignStore extends DesignParams {
   setParam: <K extends keyof DesignParams>(key: K, value: DesignParams[K]) => void
   setPattern: (p: PatternType) => void
   setTheme: (id: string) => void
+  setMirrorMode: (m: MirrorMode) => void
+  toggleCollage: () => void
   randomSeed: () => void
   setSvgContent: (s: string) => void
   exportSvg: () => void
@@ -25,6 +27,11 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
   palette: THEMES[0].colors,
   width: 800,
   height: 1000,
+  collageEnabled: false,
+  collageCols: 3,
+  collageRows: 3,
+  mirrorMode: 'none',
+  collageGap: 4,
   svgContent: '',
   setParam: (key, value) => set({ [key]: value } as any),
   setPattern: (p) => set({ pattern: p }),
@@ -32,6 +39,8 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
     const theme = THEMES.find(t => t.id === id)
     if (theme) set({ palette: theme.colors })
   },
+  setMirrorMode: (m) => set({ mirrorMode: m }),
+  toggleCollage: () => set({ collageEnabled: !get().collageEnabled }),
   randomSeed: () => set({ seed: Math.floor(Math.random() * 99999) }),
   setSvgContent: (s) => set({ svgContent: s }),
   exportSvg: () => {

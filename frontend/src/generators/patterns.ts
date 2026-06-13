@@ -1,3 +1,5 @@
+import type { MirrorMode } from '../types'
+
 // Seeded PRNG (mulberry32)
 export function createRng(seed: number) {
   let s = seed | 0
@@ -113,4 +115,66 @@ export function generateNoise(
     }
   }
   return paths
+}
+
+export function applyMirror(content: string, mode: MirrorMode, w: number, h: number): string {
+  if (mode === 'none') return content
+
+  const wrap = (inner: string, tx: number, ty: number, sx: number, sy: number) =>
+    `<g transform="translate(${tx},${ty}) scale(${sx},${sy})">${inner}</g>`
+
+  switch (mode) {
+    case 'horizontal':
+      return content + wrap(content, w, 0, -1, 1)
+    case 'vertical':
+      return content + wrap(content, 0, h, 1, -1)
+    case 'quad':
+      return (
+        content +
+        wrap(content, w, 0, -1, 1) +
+        wrap(content, 0, h, 1, -1) +
+        wrap(content, w, h, -1, -1)
+      )
+    case 'radial': {
+      let result = content
+      const segments = 8
+      const cx = w / 2
+      const cy = h / 2
+      for (let i = 1; i < segments; i++) {
+        const angle = (360 / segments) * i
+        const flip = i % 2 === 1 ? -1 : 1
+        result += `<g transform="translate(${cx},${cy}) rotate(${angle}) scale(${flip},1) translate(${-cx},${-cy})">${content}</g>`
+      }
+      return result
+    }
+    default:
+      return content
+  }
+}
+
+export function buildCollage(
+  cellContent: string,
+  cols: number,
+  rows: number,
+  cellW: number,
+  cellH: number,
+  gap: number,
+  bgColor: string
+): string {
+  let tiles = ''
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = c * (cellW + gap)
+      const y = r * (cellH + gap)
+      const flipX = c % 2 === 1 ? -1 : 1
+      const flipY = r % 2 === 1 ? -1 : 1
+      const tile = `<g transform="translate(${x + cellW / 2},${y + cellH / 2}) scale(${flipX},${flipY}) translate(${-cellW / 2},${-cellH / 2})">
+        <svg width="${cellW}" height="${cellH}" viewBox="0 0 ${cellW} ${cellH}" overflow="hidden">${cellContent}</svg>
+      </g>`
+      tiles += tile
+    }
+  }
+  const totalW = cols * cellW + (cols - 1) * gap
+  const totalH = rows * cellH + (rows - 1) * gap
+  return `<rect width="${totalW}" height="${totalH}" fill="${bgColor}"/>${tiles}`
 }
